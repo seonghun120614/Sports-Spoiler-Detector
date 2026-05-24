@@ -1,12 +1,17 @@
+.env
+.python-version
+.venv
+.idea/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
 
 # C extensions
+# Distribution / packaging
 *.so
 
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
