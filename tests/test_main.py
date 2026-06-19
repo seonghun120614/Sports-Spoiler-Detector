@@ -20,6 +20,7 @@ Ref: https://medium.com/the-pythonworld/the-architecture-blueprint-every-python-
 """
 
 from fastapi.testclient import TestClient
+
 from main import app
 
 client = TestClient(app)
@@ -27,6 +28,8 @@ client = TestClient(app)
 """
 Test for server loading complete
 """
+
+
 def test_read_root():
     response = client.get("/")
     print(response.json())

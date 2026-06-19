@@ -13,7 +13,7 @@ Ref: https://medium.com/the-pythonworld/the-architecture-blueprint-every-python-
 
 from fastapi import FastAPI
 
-app = FastAPI()
+app = FastAPI(title="Sports Spoiler Detector API")
 
 @app.get("/")
 def main():
