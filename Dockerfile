@@ -44,4 +44,4 @@ COPY --from=builder /app /app
 ENV PATH="/app/.venv/bin:$PATH"
 
 EXPOSE 8000
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["fastapi", "run", "src/main.py", "--host", "0.0.0.0", "--forwarded-allow-ips", "*", "--proxy-headers", "--port", "8000"]
