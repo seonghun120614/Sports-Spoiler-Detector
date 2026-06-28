@@ -8,12 +8,16 @@ import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    if not "TEST_FLAG" in os.environ:
+    try:
         app.state.ner = GliNER()
         app.state.object_detector = GroundingDINO()
         app.state.text_classifier = SetFitImpl()
         app.state.emotion_recognition = DeepFaceRecognition()
         app.state.pose_detector = YoloV8Pose()
-    else:
-        print("[TEST 모드]")
+    except Exception:
+        for attr in ("ner", "object_detector", "text_classifier",
+                     "emotion_recognition", "pose_detector"):
+            if hasattr(app.state, attr):
+                delattr(app.state, attr)
+        os.environ["TEST_FLAG"] = "1"
     yield
