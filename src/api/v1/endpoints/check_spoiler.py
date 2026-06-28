@@ -1,10 +1,12 @@
-
 from datetime import datetime
 from fastapi import APIRouter, Request
 from gliner2 import GLiNER2
 
 from src.schemas.CheckSpoiler import CheckSpoilerRequest, CheckSpoilerResponse
 from src.services.check_spoiler import check_spoiler_service
+from .constants import _TEST_RESPONSE_DATA
+
+import os
 
 router = APIRouter(prefix="/v1", tags=["Spoiler"])
 
@@ -17,7 +19,10 @@ async def check_spoiler(
     title = body.title
 
     if video_id is None or len(video_id) != 11 or title is None or len(title) <= 1:
-        return CheckSpoilerResponse(None)
+        return CheckSpoilerResponse(blurred_video=None)
+
+    if "TEST_FLAG" in os.environ:
+        return CheckSpoilerResponse.model_validate(_TEST_RESPONSE_DATA)
 
     blurred_video = await check_spoiler_service(
         video_id,
