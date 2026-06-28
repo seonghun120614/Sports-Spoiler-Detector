@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, logger
+from fastapi import FastAPI
 
 from src.services.models import *
 
@@ -14,5 +14,6 @@ async def lifespan(app: FastAPI):
         app.state.text_classifier = SetFitImpl()
         app.state.emotion_recognition = DeepFaceRecognition()
         app.state.pose_detector = YoloV8Pose()
-
-    logger.error("[TEST 모드]")
+    else:
+        print("[TEST 모드]")
+    yield
