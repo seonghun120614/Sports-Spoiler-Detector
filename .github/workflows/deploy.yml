@@ -36,6 +36,8 @@ jobs:
           docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
           docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} || true
           
-          docker run -d --name ${{ secrets.DOCKER_CONTAINER_NAME }} -p 80:8000 ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
+          docker run -d -e TEST_FLAG=1 \
+            --name ${{ secrets.DOCKER_CONTAINER_NAME }} \
+            -p 80:8000 ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
           
           docker image prune -f
