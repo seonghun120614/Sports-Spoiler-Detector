@@ -2,13 +2,12 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
-from src.services.models import *
-
 import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if "TEST_FLAG" not in os.environ:
+        from src.services.models import GliNER, GroundingDINO, SetFitImpl, DeepFaceRecognition, YoloV8Pose
         try:
             app.state.ner = GliNER()
             app.state.object_detector = GroundingDINO()

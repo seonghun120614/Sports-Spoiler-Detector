@@ -1,6 +1,5 @@
 from src.services.models.BaseModel import BaseModel
 
-from gliner2 import GLiNER2
 from dataclasses import dataclass
 
 from .constants import *
@@ -8,6 +7,7 @@ from .constants import *
 @dataclass
 class GliNER(BaseModel):
     def __post_init__(self):
+        from gliner2 import GLiNER2
         self._model = GLiNER2.from_pretrained(
             NER_MODEL_PATH,
             map_location=DEVICE,

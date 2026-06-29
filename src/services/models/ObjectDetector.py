@@ -1,11 +1,8 @@
-from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
 from dataclasses import dataclass, field
 from .constants import *
 from PIL import Image
 
 from src.services.models.BaseModel import BaseModel
-
-import torch
 
 
 @dataclass
@@ -13,11 +10,13 @@ class GroundingDINO(BaseModel):
     model_id: str = field(default=OBJECT_DETECTOR_PATH)
 
     def __post_init__(self):
+        from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
         self._processor = AutoProcessor.from_pretrained(self.model_id)
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(self.model_id).to(DEVICE)
         self._model.eval()
 
     def extract(self, image: Image.Image, threshold: float = 0.3):
+        import torch
         image = image.convert("RGB")
 
         inputs = self._processor(

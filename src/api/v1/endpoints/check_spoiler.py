@@ -1,6 +1,5 @@
 from datetime import datetime
 from fastapi import APIRouter, Request
-from gliner2 import GLiNER2
 
 from src.schemas.CheckSpoiler import CheckSpoilerRequest, CheckSpoilerResponse
 from src.services.check_spoiler import check_spoiler_service

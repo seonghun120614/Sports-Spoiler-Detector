@@ -5,7 +5,6 @@ if not hasattr(transformers.training_args, "default_logdir"):
     transformers.training_args.default_logdir = _default_logdir
 
 from dataclasses import dataclass
-from setfit import SetFitModel
 
 from src.services.models.BaseModel import BaseModel
 
@@ -14,6 +13,7 @@ from .constants import *
 @dataclass
 class SetFitImpl(BaseModel):
     def __post_init__(self):
+        from setfit import SetFitModel
         self._model = SetFitModel.from_pretrained(
             SETFIT_MODEL_PATH,
             labels=["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"],

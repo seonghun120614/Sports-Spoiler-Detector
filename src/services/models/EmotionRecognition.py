@@ -1,5 +1,3 @@
-from deepface import DeepFace
-
 from src.services.models.BaseModel import BaseModel
 
 import numpy as np
@@ -7,6 +5,7 @@ import numpy as np
 class DeepFaceRecognition(BaseModel):
 
     def extract(self, bgr_images: list[np.ndarray]) -> list[dict]:
+        from deepface import DeepFace
         results = []
 
         for face_bgr in bgr_images:

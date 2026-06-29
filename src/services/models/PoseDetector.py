@@ -2,7 +2,6 @@ import math
 import numpy as np
 
 from PIL.Image import Image
-from ultralytics import YOLO
 from dataclasses import dataclass, field
 
 from src.services.models.BaseModel import BaseModel
@@ -14,6 +13,7 @@ class YoloV8Pose(BaseModel):
     model_id: str = field(default=POSE_DETECTOR_PATH)
 
     def __post_init__(self):
+        from ultralytics import YOLO
         self._model = YOLO(self.model_id)
 
     def extract(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
