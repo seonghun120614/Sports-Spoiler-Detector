@@ -1,10 +1,13 @@
 from PIL import Image
 
 from src.schemas.CheckSpoiler import *
-from src.services.constants import *
+from src.services.models.BaseModel import BaseModel
 
+from .constants import *
+
+import httpx
 import numpy as np
-import requests
+import io
 
 async def check_spoiler_service(
         video_id: str,
@@ -13,10 +16,26 @@ async def check_spoiler_service(
         ner: BaseModel,
         object_detector: BaseModel,
         pose_detector: BaseModel,
-        text_classifier: BaseModel
+        text_classifier: BaseModel,
+        ocr: BaseModel,
 ) -> BlurredVideo:
     image_url = f"https://img.youtube.com/vi/{video_id}/mqdefault.jpg"
-    image = Image.open(requests.get(image_url, stream=True).raw).convert('RGB')
+
+    async with httpx.AsyncClient() as client:
+        response = await client.get(image_url)
+        response.raise_for_status()
+
+    image = Image.open(io.BytesIO(response.content)).convert('RGB')
+    img_array = np.array(image)
+
+    overlay_texts = ocr.extract(img_array)
+    texts = [title] + [_[1] for _ in overlay_texts]
+
+    blurred_title, text_spoiler_results = await check_text(
+        texts,
+        text_classifier=text_classifier,
+        ner=ner
+    )
 
     blurred_image = await check_image(
         image,
@@ -25,16 +44,22 @@ async def check_spoiler_service(
         pose_detector=pose_detector
     )
 
-    blurred_text = await check_text(
-        title,
-        text_classifier=text_classifier,
-        ner=ner
-    )
+    blurred_image.overlay_texts = overlay_texts
+
+    merged_overlays = []
+    for ocr_item, spoiler_info in zip(overlay_texts, text_spoiler_results):
+        bbox, text, confidence = ocr_item
+        merged_overlays.append({
+            "box": [[int(x), int(y)] for x, y in bbox],
+            "text": str(text),
+            "ocr_confidence": float(confidence),
+            "spoiler": spoiler_info,
+        })
 
     return BlurredVideo(
         video_id=video_id,
         blurred_image=blurred_image,
-        blurred_text=blurred_text
+        blurred_text=blurred_title,
     )
 
 async def check_image(
@@ -46,9 +71,9 @@ async def check_image(
     detections = object_detector.extract(image)
     angles = pose_detector.extract(image)
 
-    objects = []  # face가 아닌 것들만 남김
+    objects = []  # objects without facial
     faces = []
-    bgr_faces = [] # emotion 모델 입력용 crop
+    bgr_faces = [] # cropped facial images that inputting into DeepFace
 
     for det in detections:
         if "face" not in det["label"]:
@@ -56,7 +81,7 @@ async def check_image(
             continue
         x0, y0, x1, y1 = map(int, det["box"])
         crop = image.crop((x0, y0, x1, y1))
-        faces.append(det)    # box·confidence·label 그대로 보관
+        faces.append(det)    # box·confidence·label
         bgr_faces.append(np.array(crop)[:, :, ::-1])
 
     emotions = emotion_recognition.extract(bgr_faces)
@@ -72,26 +97,25 @@ async def check_image(
         objects=objects,
         faces=face_results,
         angles=angles,
+        overlay_texts=None
     )
 
 async def check_text(
-        text: str,
+        texts: list[str],
         text_classifier: BaseModel,
         ner: BaseModel
-) -> BlurredText:
-    spoiler: str = text_classifier.extract(text)
+) -> tuple[BlurredText, list]:
+    # For Title
+    spoiler: str = text_classifier.extract(texts[0])
 
-    entities = ner.extract(text)
+    entities = ner.extract(texts)
 
     result = dict()
-    for label in entities['entities'].keys():
+    for label in entities[0]['entities'].keys():
         spoiler_level = ENTITY_TO_SPOILER_LEVEL[label]
         spans = result.get(spoiler_level, [])
 
-        for entity in entities['entities'][label]:
-
-            # TODO: Add business logic for Hiding ex. scoring_text + name
-
+        for entity in entities[0]['entities'][label]:
             spans.append(Span(
                 text=entity["text"],
                 confidence=entity["confidence"],
@@ -102,7 +126,7 @@ async def check_text(
         result[spoiler_level] = spans
 
     return BlurredText(
-        text = text,
+        text = texts[0],
         spoiler = spoiler,
         spans = result
-    )
+    ), entities[1:]

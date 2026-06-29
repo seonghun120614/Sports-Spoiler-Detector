@@ -3,6 +3,7 @@ from .NER import GliNER
 from .ObjectDetector import GroundingDINO
 from .PoseDetector import YoloV8Pose
 from .TextClassifier import SetFitImpl
+from .OCR import EasyOCR
 from .BaseModel import BaseModel
 
 __all__ = [
@@ -12,4 +13,5 @@ __all__ = [
     "GroundingDINO",
     "YoloV8Pose",
     "SetFitImpl",
+    "EasyOCR"
 ]

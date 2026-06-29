@@ -4,11 +4,17 @@ from fastapi import FastAPI
 
 import os
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if "TEST_FLAG" not in os.environ:
-        from src.services.models import GliNER, GroundingDINO, SetFitImpl, DeepFaceRecognition, YoloV8Pose
+        from src.services.models import (
+            GliNER, GroundingDINO, SetFitImpl,
+            DeepFaceRecognition, YoloV8Pose,
+            EasyOCR
+        )
         try:
+            app.state.ocr = EasyOCR()
             app.state.ner = GliNER()
             app.state.object_detector = GroundingDINO()
             app.state.text_classifier = SetFitImpl()

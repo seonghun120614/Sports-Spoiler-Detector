@@ -13,6 +13,7 @@ class BlurredImage(BaseModel):
     objects: list | dict
     faces: list | dict
     angles: list | dict
+    overlay_texts: list | dict | None
 
 # ===== For Text =====
 class Span(BaseModel):

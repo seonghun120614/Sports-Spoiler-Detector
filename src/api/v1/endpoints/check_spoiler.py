@@ -31,6 +31,7 @@ async def check_spoiler(
         ner=request.app.state.ner,
         text_classifier=request.app.state.text_classifier,
         emotion_recognition=request.app.state.emotion_recognition,
+        ocr=request.app.state.ocr,
     )
 
     return CheckSpoilerResponse(
