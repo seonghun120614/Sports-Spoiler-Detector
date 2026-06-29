@@ -99,8 +99,8 @@ _TEST_RESPONSE_DATA = {
                 }
             ],
             "overlay_texts": [
-                [
-                    [
+                {
+                    "box": [
                         [
                             13,
                             39
@@ -118,9 +118,29 @@ _TEST_RESPONSE_DATA = {
                             99
                         ]
                     ],
-                    "2:1",
-                    0.9909533629251359
-                ]
+                    "text": "2:1",
+                    "ocr_confidence": 0.9909533629251359,
+                    "spoiler": {
+                        "entities": {
+                            "success": [],
+                            "failure": [],
+                            "draw": [],
+                            "round": [],
+                            "name": [],
+                            "scoring_text": [
+                                {
+                                    "text": "1",
+                                    "confidence": 0.9422452449798584,
+                                    "start": 2,
+                                    "end": 3
+                                }
+                            ],
+                            "special_event": [],
+                            "emotive": [],
+                            "aftermath": []
+                        }
+                    }
+                }
             ]
         },
         "blurred_text": {
@@ -153,5 +173,5 @@ _TEST_RESPONSE_DATA = {
             }
         }
     },
-    "timestamp": "2026-06-29T17:25:21.751281"
+    "timestamp": "2026-06-29T17:55:49.748850"
 }

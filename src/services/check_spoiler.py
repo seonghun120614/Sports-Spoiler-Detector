@@ -44,8 +44,6 @@ async def check_spoiler_service(
         pose_detector=pose_detector
     )
 
-    blurred_image.overlay_texts = overlay_texts
-
     merged_overlays = []
     for ocr_item, spoiler_info in zip(overlay_texts, text_spoiler_results):
         bbox, text, confidence = ocr_item
@@ -55,6 +53,8 @@ async def check_spoiler_service(
             "ocr_confidence": float(confidence),
             "spoiler": spoiler_info,
         })
+
+    blurred_image.overlay_texts = merged_overlays
 
     return BlurredVideo(
         video_id=video_id,
