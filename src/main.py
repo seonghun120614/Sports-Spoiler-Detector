@@ -10,14 +10,22 @@ Nothing else should live here.
 
 Ref: https://medium.com/the-pythonworld/the-architecture-blueprint-every-python-backend-project-needs-207216931123
 """
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from src.core.lifespan import lifespan
 from src.api.v1.endpoints.check_spoiler import router as check_spoiler_router
 
 app = FastAPI(title="Sports Spoiler Detector API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origin_regex=r"chrome-extension://.*",
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(check_spoiler_router)
 
 @app.get("/")
