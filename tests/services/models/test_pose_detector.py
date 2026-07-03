@@ -2,13 +2,15 @@
 import requests
 from PIL import Image
 
-from src.services.models.PoseDetector import YoloV8Pose
+from src.services.models.PoseDetector import YoloV26Pose
 from tests.services.constants import *
 
 
-def test_yolov8pose():
-    model = YoloV8Pose()
+def test_yolov26pose():
+    model = YoloV26Pose()
 
-    results = model.extract(Image.open(requests.get(IMAGE_URL, stream=True).raw).convert("RGB"), debug=False)
+    img = Image.open(requests.get(IMAGE_URL_EX, stream=True).raw).convert("RGB")
+
+    results = model.predict([img])
 
     print(results)

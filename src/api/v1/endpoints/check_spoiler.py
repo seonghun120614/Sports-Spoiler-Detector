@@ -12,20 +12,20 @@ router = APIRouter(prefix="/v1", tags=["Spoiler"])
 @router.post("/check-spoiler")
 async def check_spoiler(
         request: Request,
-        body: CheckSpoilerRequest
-) -> CheckSpoilerResponse:
-    video_id = body.video_id
-    title = body.title
+        body: list[CheckSpoilerRequest]
+) -> list[CheckSpoilerResponse]:
+    video_ids = [_.video_id for _ in body]
+    titles = [_.title for _ in body]
 
-    if video_id is None or len(video_id) != 11 or title is None or len(title) <= 1:
-        return CheckSpoilerResponse(blurred_video=None)
+    if body is None:
+        return []
 
     if "TEST_FLAG" in os.environ:
-        return CheckSpoilerResponse.model_validate(_TEST_RESPONSE_DATA)
+        return [CheckSpoilerResponse.model_validate(_TEST_RESPONSE_DATA)]
 
-    blurred_video = await check_spoiler_service(
-        video_id,
-        title,
+    blurred_videos = await check_spoiler_service(
+        video_ids,
+        titles,
         object_detector=request.app.state.object_detector,
         pose_detector=request.app.state.pose_detector,
         ner=request.app.state.ner,
@@ -34,7 +34,7 @@ async def check_spoiler(
         ocr=request.app.state.ocr,
     )
 
-    return CheckSpoilerResponse(
+    return [CheckSpoilerResponse(
         blurred_video=blurred_video,
         timestamp=datetime.now()
-    )
+    ) for blurred_video in blurred_videos]

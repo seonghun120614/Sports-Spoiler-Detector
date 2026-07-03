@@ -6,6 +6,6 @@ from tests.services.constants import TITLE_EX
 def test_ner():
     model = GliNER()
 
-    results = model.extract(TITLE_EX)
+    results = model.predict([TITLE_EX, "HELLO"])
 
     print(results)
