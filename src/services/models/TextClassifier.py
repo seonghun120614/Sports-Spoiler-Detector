@@ -14,7 +14,7 @@ class SetFitImpl(BaseModel):
         from setfit import SetFitModel
         self._model = SetFitModel.from_pretrained(
             SETFIT_MODEL_PATH,
-            labels=["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"],
+            labels=LABELS,
             map_location=DEVICE,
         )
 
@@ -24,7 +24,7 @@ class SetFitImpl(BaseModel):
         elements = []
         for row in probs:
             best_idx = int(row.argmax())
-            label = self._model.labels[best_idx]
+            label = self._model.labels[min(best_idx, len(LABELS) - 1)]
             confidence = round(float(row[best_idx]), 3)
             elements.append(SpoilerElement(label=label, confidence=confidence))
 

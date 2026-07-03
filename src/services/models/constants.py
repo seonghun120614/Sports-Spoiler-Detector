@@ -2,10 +2,10 @@ import torch
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-NER_MODEL_PATH = BASE_DIR / "static" / "ner_model"
-POSE_DETECTOR_PATH = BASE_DIR / "static" / "yolo26n-pose.pt"
+NER_MODEL_PATH = str(BASE_DIR / "static" / "ner_model")
+POSE_DETECTOR_PATH = str(BASE_DIR / "static" / "yolo26n-pose.pt")
 OBJECT_DETECTOR_PATH = "IDEA-Research/grounding-dino-tiny"
-SETFIT_MODEL_PATH = BASE_DIR / "static" / "soccer_spoiler_mpnet_v1"
+SETFIT_MODEL_PATH = str(BASE_DIR / "static" / "soccer_spoiler_mpnet_v1")
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -15,6 +15,7 @@ else:
     device = "cpu"
 
 DEVICE = torch.device(device)
+LABELS = ["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"]
 
 ENTITY_DESC = {
     "success": "A text that indicates a positive result of the match (victory, win, advance, etc.)",
