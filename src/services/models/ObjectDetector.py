@@ -15,7 +15,7 @@ class GroundingDINO(BaseModel):
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(self.model_id).to(DEVICE)
         self._model.eval()
 
-    def extract(self, image: Image.Image, threshold: float = 0.3):
+    def predict(self, image: Image.Image, threshold: float = 0.3):
         import torch
         image = image.convert("RGB")
 
@@ -37,6 +37,9 @@ class GroundingDINO(BaseModel):
         )[0]
 
         return self.format_output(results)
+
+    def batch_predict(self, image: Image.Image, threshold: float = 0.3):
+        pass
 
     @staticmethod
     def format_output(results: dict) -> list:

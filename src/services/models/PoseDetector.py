@@ -16,7 +16,7 @@ class YoloV8Pose(BaseModel):
         from ultralytics import YOLO
         self._model = YOLO(self.model_id)
 
-    def extract(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
+    def predict(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
         results = self._model(image, conf=threshold)
         all_angles = self.detect_celebration(results)
 
@@ -72,6 +72,9 @@ class YoloV8Pose(BaseModel):
             plt.show()
 
         return all_angles
+
+    def batch_predict(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
+        pass
 
     @classmethod
     def calculate_angle(cls, p1: tuple, p2: tuple, p3: tuple) -> float:

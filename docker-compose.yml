@@ -1,12 +1,12 @@
 services:
   app:
+    image: seonghun120614/sports-spoiler-detector:latest
     platform: linux/amd64
-    build: .
-    image: sports-spoiler-detector:v1
-    environment:
-      - FORWARDED_ALLOW_IPS=*
+    env_file:
+      - .env
     expose:
       - "8000"
+    restart: unless-stopped
     healthcheck:
       test: [ "CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/', timeout=3).status==200 else 1)" ]
       interval: 30s
@@ -18,8 +18,19 @@ services:
     image: nginx:1.27-alpine
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    restart: unless-stopped
     depends_on:
       app:
         condition: service_healthy
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot

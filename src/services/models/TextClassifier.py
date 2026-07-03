@@ -19,5 +19,8 @@ class SetFitImpl(BaseModel):
             labels=["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"],
         )
 
-    def extract(self, text: str):
+    def predict(self, text: str):
         return self._model.predict(text)
+
+    def batch_predict(self, texts: list[str]):
+        pass

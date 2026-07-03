@@ -4,7 +4,7 @@ import numpy as np
 
 class DeepFaceRecognition(BaseModel):
 
-    def extract(self, bgr_images: list[np.ndarray]) -> list[dict]:
+    def predict(self, bgr_images: list[np.ndarray]) -> list[dict]:
         from deepface import DeepFace
         results = []
 
@@ -25,3 +25,6 @@ class DeepFaceRecognition(BaseModel):
                 pass
 
         return results
+
+    def batch_predict(self, bgr_images: list[np.ndarray], threshold: float = 0.5):
+        pass

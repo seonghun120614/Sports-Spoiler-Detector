@@ -9,6 +9,11 @@ for homogeneity about other feature extractors or detector
 class BaseModel(ABC):
 
     @abstractmethod
-    def extract(self, arg: Any):
-        """extracting labels from target"""
+    def predict(self, arg: Any):
+        """predicting label from target"""
+        pass
+
+    @abstractmethod
+    def batch_predict(self, arg: Any):
+        """predicting labels from target"""
         pass

@@ -21,6 +21,7 @@ async def lifespan(app: FastAPI):
             app.state.emotion_recognition = DeepFaceRecognition()
             app.state.pose_detector = YoloV8Pose()
         except Exception:
+            print("")
             for attr in ("ner", "object_detector", "text_classifier",
                          "emotion_recognition", "pose_detector"):
                 if hasattr(app.state, attr):

@@ -32,6 +32,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Copy config files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          source: "docker-compose.yml,default.conf"
+          target: "/home/ubuntu"
+
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -39,15 +48,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
-
-            docker stop ${{ secrets.DOCKER_CONTAINER_NAME }} || true
-            docker rm ${{ secrets.DOCKER_CONTAINER_NAME }} || true
-
-            docker run -d -e TEST_FLAG=1 \
-              --name ${{ secrets.DOCKER_CONTAINER_NAME }} \
-              -p 80:8000 \
-              --restart unless-stopped \
-              ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKER_IMAGE_NAME }}:latest
-
-            docker image prune -af
+            docker compose pull app
+            docker compose up -d app
+            docker image prune -f

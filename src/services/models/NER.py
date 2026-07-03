@@ -31,7 +31,7 @@ class GliNER(BaseModel):
         )
         self._model.eval()
 
-    def extract(self, texts: list[str], threshold: float = 0.5):
+    def predict(self, texts: list[str], threshold: float = 0.5):
         result = self._model.batch_extract_entities(
             texts,
             entity_types=ENTITY_DESC,
@@ -40,3 +40,6 @@ class GliNER(BaseModel):
             include_spans=True,
         )
         return _clean_numpy(result)
+
+    def batch_predict(self, texts: list[str], threshold: float = 0.5):
+        pass

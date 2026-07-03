@@ -3,7 +3,7 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 NER_MODEL_PATH = BASE_DIR / "static" / "ner_model"
-POSE_DETECTOR_PATH = BASE_DIR / "static" / "yolov8n-pose.pt"
+POSE_DETECTOR_PATH = BASE_DIR / "static" / "yolo26n-pose.pt"
 OBJECT_DETECTOR_PATH = "IDEA-Research/grounding-dino-tiny"
 SETFIT_MODEL_PATH = BASE_DIR / "static" / "soccer_spoiler_mpnet_v1"
 

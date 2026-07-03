@@ -7,7 +7,7 @@ class EasyOCR(BaseModel):
         import easyocr
         self._reader = easyocr.Reader(['en', 'ko'])
 
-    def extract(self, image: np.ndarray) -> list:
+    def predict(self, image: np.ndarray) -> list:
         raw = self._reader.readtext(image)
         return [
             (
@@ -17,3 +17,6 @@ class EasyOCR(BaseModel):
             )
             for bbox, text, conf in raw
         ]
+
+    def batch_predict(self, arg):
+        pass
