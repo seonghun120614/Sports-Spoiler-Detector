@@ -3,7 +3,8 @@ from .constants import *
 from PIL import Image
 
 from src.services.models.BaseModel import BaseModel
-
+from src.domains.SpoilerInformation import SpoilerElement, BoundingBox, Point, ImageSpoiler
+from src.services.models.utils import _clear
 
 @dataclass
 class GroundingDINO(BaseModel):
@@ -15,13 +16,12 @@ class GroundingDINO(BaseModel):
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(self.model_id).to(DEVICE)
         self._model.eval()
 
-    def predict(self, image: Image.Image, threshold: float = 0.3):
+    def predict(self, images: list[Image.Image], threshold: float = 0.3) -> list[list[ImageSpoiler]]:
         import torch
-        image = image.convert("RGB")
 
         inputs = self._processor(
-            images=image,
-            text=PROMPT,
+            images=images,
+            text=[PROMPT] * len(images),
             return_tensors="pt"
         ).to(DEVICE)
 
@@ -33,21 +33,24 @@ class GroundingDINO(BaseModel):
             inputs.input_ids,
             threshold=threshold,
             text_threshold=threshold,
-            target_sizes=[image.size[::-1]]
-        )[0]
+            target_sizes=[img.size[::-1] for img in images]
+        )
 
         return self.format_output(results)
 
-    def batch_predict(self, image: Image.Image, threshold: float = 0.3):
-        pass
 
     @staticmethod
-    def format_output(results: dict) -> list:
-        formatted = []
-        for score, label, box in zip(results["scores"], results["text_labels"], results["boxes"]):
-            formatted.append({
-                "label": label,
-                "confidence": round(score.item(), 3),
-                "box": [round(i, 2) for i in box.tolist()]
-            })
-        return formatted
+    def format_output(outputs: list[dict]) -> list[list[ImageSpoiler]]:
+        outputs = _clear(outputs)
+        result = []
+        for objects in outputs:
+            one = []
+            for score, label, box in zip(objects["scores"], objects["text_labels"], objects["boxes"]):
+                spoiler_elem = SpoilerElement(label=label, confidence=round(score, 2))
+                left_top = Point(x=box[0], y=box[1])
+                right_bottom = Point(x=box[2], y=box[3])
+                bounding_box = BoundingBox(top_left=left_top, bottom_right=right_bottom)
+                image_spoiler = ImageSpoiler.create(spoiler_elem=spoiler_elem, bounding_box=bounding_box)
+                one.append(image_spoiler)
+            result.append(one)
+        return result

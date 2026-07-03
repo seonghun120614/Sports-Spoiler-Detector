@@ -1,30 +1,37 @@
 from src.services.models.BaseModel import BaseModel
+from src.domains.SpoilerInformation import ImageSpoiler, Point, SpoilerElement, BoundingBox
 
 import numpy as np
 
 class DeepFaceRecognition(BaseModel):
 
-    def predict(self, bgr_images: list[np.ndarray]) -> list[dict]:
+    def predict(self, bgr_images: list[np.ndarray]) -> list[list[ImageSpoiler]]:
+        """Several Image Input"""
         from deepface import DeepFace
-        results = []
+        result = []
 
-        for face_bgr in bgr_images:
-            try:
-                emotions = DeepFace.analyze(
-                    img_path=face_bgr,
-                    actions=["emotion"],
-                    enforce_detection=False,
-                )
+        outputs = DeepFace.analyze(
+            img_path=bgr_images,
+            actions=["emotion"],
+            enforce_detection=False,
+        )
 
-                for emotion in emotions:
-                    for e, prob in emotion['emotion'].items():
-                        emotion['emotion'][e] = round(prob.item(), 2)
+        for faces in outputs:
+            one = []
+            for face in faces:
+                emotion = face['dominant_emotion']
 
-                return emotions
-            except Exception as e:
-                pass
+                spoiler_elem = SpoilerElement(label = emotion,
+                                              confidence = round(face['emotion'][emotion].item() / 100, 2))
+                bounding_box = self._get_position(face['region'])
 
-        return results
+                img_spoiler = ImageSpoiler.create(spoiler_elem=spoiler_elem,
+                                                  bounding_box=bounding_box)
+                one.append(img_spoiler)
+            result.append(one)
+        return result
 
-    def batch_predict(self, bgr_images: list[np.ndarray], threshold: float = 0.5):
-        pass
+    def _get_position(self, region: dict[str, int]) -> BoundingBox:
+        p1 = Point(x = region['x'], y = region['y'])
+        p2 = p1.copy(x = region['x'] + region['w'], y = region['y'] + region['h'])
+        return BoundingBox(top_left = p1, bottom_right = p2)

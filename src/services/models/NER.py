@@ -3,22 +3,7 @@ from src.services.models.BaseModel import BaseModel
 from dataclasses import dataclass
 
 from .constants import *
-
-import numpy as np
-
-def _clean_numpy(obj):
-    """numpy 타입을 파이썬 기본 타입으로 재귀 변환"""
-    if isinstance(obj, np.integer):
-        return int(obj)
-    if isinstance(obj, np.floating):
-        return float(obj)
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, dict):
-        return {k: _clean_numpy(v) for k, v in obj.items()}
-    if isinstance(obj, (list, tuple)):
-        return [_clean_numpy(v) for v in obj]
-    return obj
+from ...domains.SpoilerInformation import SpoilerElement, TextSpan, TextSpoiler
 
 
 @dataclass
@@ -31,15 +16,24 @@ class GliNER(BaseModel):
         )
         self._model.eval()
 
-    def predict(self, texts: list[str], threshold: float = 0.5):
-        result = self._model.batch_extract_entities(
+    def predict(self, texts: list[str], threshold: float = 0.5) -> list[list[TextSpoiler]]:
+        result = []
+        outputs = self._model.batch_extract_entities(
             texts,
             entity_types=ENTITY_DESC,
             threshold=threshold,
             include_confidence=True,
             include_spans=True,
         )
-        return _clean_numpy(result)
-
-    def batch_predict(self, texts: list[str], threshold: float = 0.5):
-        pass
+        for text in outputs:
+            one = []
+            for label, entities in text['entities'].items():
+                for entity in entities:
+                    spoiler_elem = SpoilerElement(label=label, confidence=entity['confidence'])
+                    text_span = TextSpan(start=entity['start'], end=entity['end'])
+                    text_spoiler = TextSpoiler.create(spoiler_elem=spoiler_elem,
+                                                      text_span=text_span,
+                                                      text=entity['text'])
+                    one.append(text_spoiler)
+            result.append(one)
+        return result

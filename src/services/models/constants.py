@@ -38,6 +38,6 @@ KPT_MAP = {
     'L_ANKLE': 15,   'R_ANKLE': 16
 }
 
-PROMPT = "player lifting a trophy. human face. face. ball. goal net."
+PROMPT = "player lifting a trophy. ball. goal net."
 
 NER_THRESHOLD = 0.5

@@ -14,5 +14,5 @@ def test_ocr():
 
     image_arr = np.array(image)
 
-    result = model.extract(image_arr)
+    result = model.predict([image_arr])
     print(result)

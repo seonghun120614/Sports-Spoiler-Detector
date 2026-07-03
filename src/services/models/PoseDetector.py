@@ -6,75 +6,41 @@ from dataclasses import dataclass, field
 
 from src.services.models.BaseModel import BaseModel
 from .constants import *
+from src.services.models.utils import _clear
+from src.domains.SpoilerInformation import BoundingBox, ImageSpoiler, Point, SpoilerElement
 
 
 @dataclass
-class YoloV8Pose(BaseModel):
+class YoloV26Pose(BaseModel):
     model_id: str = field(default=POSE_DETECTOR_PATH)
 
     def __post_init__(self):
         from ultralytics import YOLO
         self._model = YOLO(self.model_id)
 
-    def predict(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
-        results = self._model(image, conf=threshold)
-        all_angles = self.detect_celebration(results)
+    def predict(self, images: list[Image], threshold: float = 0.5) -> list[list[ImageSpoiler]]:
+        result = []
+        outputs = self._model(images, conf=threshold)
 
-        if debug:
-            import cv2
-            import matplotlib.pyplot as plt
+        for r in outputs:
+            one = []
+            celebration = self.detect_celebration(r)
 
-            # YOLO 기본 시각화 이미지를 BGR 형태로 가져옴
-            annotated_image = results[0].plot()
+            for box, cel in zip(r.boxes, celebration):
+                x1, y1, x2, y2 = _clear(box.xyxy[0].tolist())
 
-            # 탐지된 바운딩 박스와 계산된 각도를 매칭하여 텍스트 렌더링
-            if results[0].boxes and results[0].boxes.xyxy is not None:
-                boxes = results[0].boxes.xyxy.cpu().numpy()
+                is_celebrating = cel['flags']['arms_wide_open'] or cel['flags']['knees_sliding']
+                conf = round(box.conf[0].item(), 2) if is_celebrating else 0.0
 
-                for i, (angles, box) in enumerate(zip(all_angles, boxes)):
-                    # 바운딩 박스의 좌상단 좌표 (x1, y1)
-                    x1, y1, x2, y2 = map(int, box)
+                p1 = Point(x=x1, y=y1)
+                p2 = Point(x=x2, y=y2)
+                bounding_box = BoundingBox(top_left=p1, bottom_right=p2)
 
-                    # 출력할 텍스트 구성 (팔, 다리 분리)
-                    a = angles["angles"]
-                    text_arm = f"P{i + 1} Arm: L({a['left_arm']}), R({a['right_arm']})"
-                    text_leg = f"P{i + 1} Leg: L({a['left_knee']}), R({a['right_knee']})"
+                spoiler_elem = SpoilerElement(label="celebration", confidence=conf)
+                one.append(ImageSpoiler.create(spoiler_elem=spoiler_elem, bounding_box=bounding_box))
+            result.append(one)
 
-                    # 첫 번째 줄: 팔 각도 텍스트 렌더링 (y1에서 위로 35픽셀 띄움)
-                    cv2.putText(
-                        annotated_image,
-                        text_arm,
-                        (x1, y1 - 35),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.8,  # 화면 비율에 맞게 폰트 크기 조정
-                        (0, 200, 0),  # BGR 색상 (초록색)
-                        2
-                    )
-
-                    # 두 번째 줄: 다리 각도 텍스트 렌더링 (y1에서 위로 10픽셀 띄움)
-                    cv2.putText(
-                        annotated_image,
-                        text_leg,
-                        (x1, y1 - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX,
-                        0.8,
-                        (0, 200, 0),
-                        2
-                    )
-
-            # BGR을 RGB로 변환하여 Matplotlib으로 출력
-            annotated_image_rgb = annotated_image[..., ::-1]
-
-            plt.figure(figsize=(12, 10))
-            plt.imshow(annotated_image_rgb)
-            plt.title("Pose Estimation with Arm and Leg Angles")
-            plt.axis('off')
-            plt.show()
-
-        return all_angles
-
-    def batch_predict(self, image: Image, threshold: float = 0.5, debug: bool = False) -> list:
-        pass
+        return result
 
     @classmethod
     def calculate_angle(cls, p1: tuple, p2: tuple, p3: tuple) -> float:
@@ -97,16 +63,16 @@ class YoloV8Pose(BaseModel):
         return angle
 
     @classmethod
-    def detect_celebration(cls, results) -> list[dict]:
+    def detect_celebration(cls, player) -> list[dict]:
         """
         양팔 벌림(>= 90도)과 무릎 슬라이딩(<= 45도) 조건을 분석하여 논리값(Boolean)과 함께 반환합니다.
         """
         analysis_list = []
 
-        if not results[0].keypoints or results[0].keypoints.xy is None:
+        if not player.keypoints or player.keypoints.xy is None:
             return analysis_list
 
-        for kpts in results[0].keypoints.xy:
+        for kpts in player.keypoints.xy:
             kpts_np = kpts.cpu().numpy()
 
             # 1. 양팔-몸통 각도 (어깨가 꼭짓점: Hip - Shoulder - Elbow)

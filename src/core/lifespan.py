@@ -10,7 +10,7 @@ async def lifespan(app: FastAPI):
     if "TEST_FLAG" not in os.environ:
         from src.services.models import (
             GliNER, GroundingDINO, SetFitImpl,
-            DeepFaceRecognition, YoloV8Pose,
+            DeepFaceRecognition, YoloV26Pose,
             EasyOCR
         )
         try:
@@ -19,7 +19,7 @@ async def lifespan(app: FastAPI):
             app.state.object_detector = GroundingDINO()
             app.state.text_classifier = SetFitImpl()
             app.state.emotion_recognition = DeepFaceRecognition()
-            app.state.pose_detector = YoloV8Pose()
+            app.state.pose_detector = YoloV26Pose()
         except Exception:
             print("")
             for attr in ("ner", "object_detector", "text_classifier",
