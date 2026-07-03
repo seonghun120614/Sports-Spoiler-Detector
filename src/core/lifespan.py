@@ -20,8 +20,10 @@ async def lifespan(app: FastAPI):
             app.state.text_classifier = SetFitImpl()
             app.state.emotion_recognition = DeepFaceRecognition()
             app.state.pose_detector = YoloV26Pose()
-        except Exception:
-            print("")
+        except Exception as e:
+            print(f"[lifespan] 모델 로딩 실패: {e}")
+            import traceback
+            traceback.print_exc()
             for attr in ("ner", "object_detector", "text_classifier",
                          "emotion_recognition", "pose_detector"):
                 if hasattr(app.state, attr):

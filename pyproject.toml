@@ -13,6 +13,7 @@ dependencies = [
     "deepface>=0.0.100",
     "easyocr>=1.7.2",
     "fastapi[standard]>=0.136.3",
+    "flashdeberta>=0.0.7 ; sys_platform == 'linux'",
     "gliner2>=1.3.1",
     "pillow>=12.2.0",
     "pydantic>=2.13.4",

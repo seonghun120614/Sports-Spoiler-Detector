@@ -17,6 +17,7 @@ class YoloV26Pose(BaseModel):
     def __post_init__(self):
         from ultralytics import YOLO
         self._model = YOLO(self.model_id)
+        self._model.to(DEVICE)
 
     def predict(self, images: list[Image], threshold: float = 0.5) -> list[list[ImageSpoiler]]:
         result = []

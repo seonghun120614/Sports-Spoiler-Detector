@@ -15,6 +15,7 @@ class SetFitImpl(BaseModel):
         self._model = SetFitModel.from_pretrained(
             SETFIT_MODEL_PATH,
             labels=["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"],
+            map_location=DEVICE,
         )
 
     def predict(self, inputs: list[str]) -> list[SpoilerElement]:
