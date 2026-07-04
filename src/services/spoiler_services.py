@@ -1,7 +1,7 @@
 from PIL import Image
 
 from src.services.models.BaseModel import BaseModel
-from .domains.SpoilerInformation import SpoilerInformation, TextSpoiler, ImageSpoiler
+from .domains.SpoilerInformation import SpoilerInformation, TextSpoiler, ImageSpoiler, SpoilerElement
 
 import asyncio
 import io
@@ -48,7 +48,7 @@ async def check_spoiler_service(
             height=images[idx].height,
             spoiler=spoiler,
             texts=text_spoiler,
-            images=image_spoiler + ocr_result,
+            images=image_spoiler + ocr_result[idx],
         )
 
         result.append(spoiler_information)
@@ -90,7 +90,11 @@ async def check_text(
         text_classifier: BaseModel,
         ner: BaseModel,
         ocr_result: list[list[ImageSpoiler]] | None = None,
-) -> tuple[list[str], list[list[TextSpoiler]], list[list[ImageSpoiler]]]:
+) -> tuple[
+    list[SpoilerElement],
+    list[list[TextSpoiler]],
+    list[list[ImageSpoiler]]
+]:
     whole_texts: list[str] = []
     title_indices: list[int] = [0]
 
@@ -100,17 +104,22 @@ async def check_text(
         title_indices.append(len(whole_texts))
 
     # Text Classification Batch Processing
-    spoilers: list = text_classifier.predict(whole_texts)
+    spoilers: list[SpoilerElement] = text_classifier.predict(whole_texts)
 
     # NER Batch Processing, only applied title
     entities: list[list[TextSpoiler]] = ner.predict(titles)
 
-    title_spoilers: list[str] = [spoilers[_] for _ in title_indices[:-1]]
+    title_spoilers: list[SpoilerElement] = [spoilers[_] for _ in title_indices[:-1]]
 
-    overlay_text_spoilers: list[list[str]] = [spoilers[(title_indices[i]+1):title_indices[i+1]] for i in range(len(title_indices)-1)]
+    overlay_text_spoilers: list[list[SpoilerElement]] = [spoilers[(title_indices[i]+1):title_indices[i+1]] for i in range(len(title_indices)-1)]
     ocr_result: list[list[ImageSpoiler]] = [
-        [item.set_label(label) for item, label in zip(inner_items, inner_labels)]
-        for inner_items, inner_labels in zip(ocr_result, overlay_text_spoilers)
+        [
+            item.set_label(spoiler_element.label)
+            .set_confidence(spoiler_element.confidence)
+            for item, spoiler_element
+            in zip(inner_items, spoiler_elements)
+        ] for inner_items, spoiler_elements
+        in zip(ocr_result, overlay_text_spoilers)
     ]
 
     return title_spoilers, entities, ocr_result

@@ -63,6 +63,10 @@ class ImageSpoiler(SpoilerElement):
     def set_label(self, label: str) -> "ImageSpoiler":
         return replace(self, label=label)
 
+    def set_confidence(self, confidence: float) -> "ImageSpoiler":
+        conf = self.confidence * confidence
+        return replace(self, confidence=round(conf, 2))
+
 @dataclass(frozen=True, kw_only=True)
 class SpoilerInformation:
     video_id: str
