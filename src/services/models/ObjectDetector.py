@@ -3,8 +3,9 @@ from .constants import *
 from PIL import Image
 
 from src.services.models.BaseModel import BaseModel
-from src.domains.SpoilerInformation import SpoilerElement, BoundingBox, Point, ImageSpoiler
 from src.services.models.utils import _clear
+from ..domains.SpoilerInformation import ImageSpoiler, SpoilerElement, Point, BoundingBox
+
 
 @dataclass
 class GroundingDINO(BaseModel):

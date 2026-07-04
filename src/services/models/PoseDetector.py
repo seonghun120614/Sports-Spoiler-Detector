@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from src.services.models.BaseModel import BaseModel
 from .constants import *
 from src.services.models.utils import _clear
-from src.domains.SpoilerInformation import BoundingBox, ImageSpoiler, Point, SpoilerElement
+from ..domains.SpoilerInformation import Point, BoundingBox, SpoilerElement, ImageSpoiler
 
 
 @dataclass

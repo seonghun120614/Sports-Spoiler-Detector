@@ -1,5 +1,4 @@
-from src.domains.SpoilerInformation import ComplexSpoiler, BoundingBox, Point
-from src.services.check_spoiler import *
+from src.services.spoiler_services import *
 from src.services.models.OCR import EasyOCR
 from src.services.models.EmotionRecognition import DeepFaceRecognition
 from src.services.models.NER import GliNER
@@ -21,7 +20,7 @@ def test_batch_check_spoiler_service():
 
     video_id = VIDEO_ID_EX
 
-    result = asyncio.run(batch_check_spoiler_service(
+    result = asyncio.run(check_spoiler_service(
         [video_id],
         [TITLE_EX],
         object_detector=object_detector,

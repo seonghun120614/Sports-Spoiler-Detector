@@ -42,3 +42,8 @@ KPT_MAP = {
 PROMPT = "player lifting a trophy. ball. goal net."
 
 NER_THRESHOLD = 0.5
+
+THUMBNAIL_WIDTH = 640
+THUMBNAIL_HEIGHT = 360
+
+OCR_LANG = ['en', 'ko']

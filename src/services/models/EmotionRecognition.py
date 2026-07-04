@@ -1,5 +1,5 @@
+from src.services.domains.SpoilerInformation import ImageSpoiler, SpoilerElement, BoundingBox, Point
 from src.services.models.BaseModel import BaseModel
-from src.domains.SpoilerInformation import ImageSpoiler, Point, SpoilerElement, BoundingBox
 
 import numpy as np
 
@@ -35,5 +35,6 @@ class DeepFaceRecognition(BaseModel):
 
     def _get_position(self, region: dict[str, int]) -> BoundingBox:
         p1 = Point(x = region['x'], y = region['y'])
-        p2 = p1.copy(x = region['x'] + region['w'], y = region['y'] + region['h'])
+        p2 = p1.copy(x = region['x'] + region['w'],
+                     y = region['y'] + region['h'])
         return BoundingBox(top_left = p1, bottom_right = p2)

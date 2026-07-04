@@ -4,30 +4,27 @@ from fastapi import FastAPI
 
 import os
 
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if "TEST_FLAG" not in os.environ:
         from src.services.models import (
             GliNER, GroundingDINO, SetFitImpl,
             DeepFaceRecognition, YoloV26Pose,
-            EasyOCR
-        )
+            EasyOCR)
         try:
-            app.state.ocr = EasyOCR()
-            app.state.ner = GliNER()
-            app.state.object_detector = GroundingDINO()
-            app.state.text_classifier = SetFitImpl()
-            app.state.emotion_recognition = DeepFaceRecognition()
-            app.state.pose_detector = YoloV26Pose()
+            app.state.models = {
+                "ocr": EasyOCR(),
+                "ner": GliNER(),
+                "object_detector": GroundingDINO(),
+                "text_classifier": SetFitImpl(),
+                "emotion_recognition": DeepFaceRecognition(),
+                "pose_detector": YoloV26Pose(),
+            }
         except Exception as e:
             print(f"[lifespan] 모델 로딩 실패: {e}")
             import traceback
             traceback.print_exc()
-            for attr in ("ner", "object_detector", "text_classifier",
-                         "emotion_recognition", "pose_detector"):
-                if hasattr(app.state, attr):
-                    delattr(app.state, attr)
+            app.state.models.clear()
             os.environ["TEST_FLAG"] = "1"
-
     yield
+    app.state.models.clear()

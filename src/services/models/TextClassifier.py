@@ -1,10 +1,12 @@
 import transformers.training_args
 from transformers.integrations.integration_utils import default_logdir as _default_logdir
+
+from ..domains.SpoilerInformation import SpoilerElement
+
 if not hasattr(transformers.training_args, "default_logdir"):
     transformers.training_args.default_logdir = _default_logdir
 from dataclasses import dataclass
 
-from src.domains.SpoilerInformation import SpoilerElement
 from src.services.models.BaseModel import BaseModel
 from .constants import *
 

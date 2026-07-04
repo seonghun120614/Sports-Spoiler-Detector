@@ -3,7 +3,7 @@ from src.services.models.BaseModel import BaseModel
 from dataclasses import dataclass
 
 from .constants import *
-from ...domains.SpoilerInformation import SpoilerElement, TextSpan, TextSpoiler
+from src.services.domains.SpoilerInformation import SpoilerElement, TextSpan, TextSpoiler
 
 
 @dataclass
@@ -35,7 +35,8 @@ class GliNER(BaseModel):
                     text_span = TextSpan(start=entity['start'], end=entity['end'])
                     text_spoiler = TextSpoiler.create(spoiler_elem=spoiler_elem,
                                                       text_span=text_span,
-                                                      text=entity['text'])
+                                                      text=entity['text'],
+                                                      label=label)
                     one.append(text_spoiler)
             result.append(one)
         return result
