@@ -17,6 +17,8 @@ class GliNER(BaseModel):
         self._model.eval()
 
     def predict(self, texts: list[str], threshold: float = 0.5) -> list[list[TextSpoiler]]:
+        if not texts: return []
+        
         result = []
         outputs = self._model.batch_extract_entities(
             texts,

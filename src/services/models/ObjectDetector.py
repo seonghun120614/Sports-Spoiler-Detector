@@ -18,6 +18,7 @@ class GroundingDINO(BaseModel):
 
     def predict(self, images: list[Image.Image], threshold: float = 0.3) -> list[list[ImageSpoiler]]:
         import torch
+        if not images: return []
 
         inputs = self._processor(
             images=images,

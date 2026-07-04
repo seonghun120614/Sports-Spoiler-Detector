@@ -19,6 +19,7 @@ class SetFitImpl(BaseModel):
         )
 
     def predict(self, inputs: list[str]) -> list[SpoilerElement]:
+        if not inputs: return []
         probs = self._model.predict_proba(inputs)  # shape: (N, num_classes)
 
         elements = []

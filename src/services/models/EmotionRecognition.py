@@ -7,6 +7,8 @@ class DeepFaceRecognition(BaseModel):
 
     def predict(self, bgr_images: list[np.ndarray]) -> list[list[ImageSpoiler]]:
         """Several Image Input"""
+
+        if not bgr_images: return []
         from deepface import DeepFace
         result = []
 

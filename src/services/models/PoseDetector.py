@@ -20,6 +20,8 @@ class YoloV26Pose(BaseModel):
         self._model.to(DEVICE)
 
     def predict(self, images: list[Image], threshold: float = 0.5) -> list[list[ImageSpoiler]]:
+        if not images: return []
+
         result = []
         outputs = self._model(images, conf=threshold)
 
