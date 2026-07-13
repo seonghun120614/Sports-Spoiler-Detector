@@ -247,11 +247,17 @@ Chrome Extension
 
 ```mermaid
 erDiagram
+    CHECK_SPOILER_RESPONSE {
+        string api_version
+        datetime timestamp
+    }
+
     SPOILER_INFORMATION {
         string video_id PK
         string title
         int width
         int height
+        string spoiler
     }
 
     SPOILER_ELEMENT {
@@ -276,15 +282,11 @@ erDiagram
         float bbox_bottom_right_y
     }
 
-    CHECK_SPOILER_RESPONSE {
-        string api_version
-        datetime timestamp
-    }
-
-    SPOILER_INFORMATION ||--|| SPOILER_ELEMENT : "spoiler (title-level)"
+    CHECK_SPOILER_RESPONSE ||--o{ SPOILER_INFORMATION : "spoiler_information (dict keyed by video_id)"
     SPOILER_INFORMATION ||--o{ TEXT_SPOILER : "texts (NER entities)"
     SPOILER_INFORMATION ||--o{ IMAGE_SPOILER : "images (CV detections)"
-    CHECK_SPOILER_RESPONSE ||--o{ SPOILER_INFORMATION : "spoiler_information"
+    SPOILER_ELEMENT ||--|| TEXT_SPOILER : "inherited by (is-a)"
+    SPOILER_ELEMENT ||--|| IMAGE_SPOILER : "inherited by (is-a)"
 ```
 
 </details>
@@ -305,6 +307,10 @@ classDiagram
         +lifespan()
         +CORS middleware
         +include_router()
+    }
+
+    class Lifespan {
+        +startup()
     }
 
     class CheckSpoilerRouter {
@@ -337,7 +343,7 @@ classDiagram
         +string title
         +int width
         +int height
-        +SpoilerElement spoiler
+        +string spoiler
         +Sequence texts
         +Sequence images
     }
@@ -404,19 +410,21 @@ classDiagram
 
     %% ========== Relationships ==========
     FastAPIApp --> CheckSpoilerRouter
+    FastAPIApp --> Lifespan
     CheckSpoilerRouter --> CheckSpoilerRequest
     CheckSpoilerRouter --> CheckSpoilerResponse
     CheckSpoilerRouter --> SpoilerService
 
     SpoilerService --> SpoilerInformation
-    SpoilerService --> GliNER
-    SpoilerService --> SetFitImpl
-    SpoilerService --> GroundingDINO
-    SpoilerService --> DeepFaceRecognition
-    SpoilerService --> YoloV26Pose
-    SpoilerService --> EasyOCR
+    SpoilerService --> BaseModel
 
-    SpoilerInformation --> SpoilerElement
+    Lifespan --> GliNER
+    Lifespan --> SetFitImpl
+    Lifespan --> GroundingDINO
+    Lifespan --> DeepFaceRecognition
+    Lifespan --> YoloV26Pose
+    Lifespan --> EasyOCR
+
     SpoilerInformation --> TextSpoiler
     SpoilerInformation --> ImageSpoiler
     TextSpoiler --|> SpoilerElement
