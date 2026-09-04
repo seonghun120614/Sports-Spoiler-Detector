@@ -1,0 +1,16 @@
+jwt:
+  secret: "this-is-very-secret-key-for-jwt-signing-please-change-it"
+  access-expire-milli-seconds: 1800000
+  refresh-expire-milli-seconds: 604800000
+
+cookie:
+  secure: true
+  http-only: true
+  same-site: "Strict"
+  path: "/"
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
