@@ -1,0 +1,10 @@
+.gradle
+build
+.idea
+.env*
+.DS_Store
+.gitignore
+.gitattributes
+Dockerfile
+docker-compose.yml
+CLAUDE.md

@@ -6,13 +6,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-
+import lombok.NoArgsConstructor;
 import java.util.UUID;
 
 @Table(name = "users")
-@RequiredArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 @Getter
 public class User {
@@ -22,11 +22,20 @@ public class User {
     private UUID uid;
 
     @Column(unique = true, nullable = false, updatable = false)
-    private final String userId;
+    private String userId;
 
-    @Column(unique = false, nullable = false, updatable = true)
-    private final String password;
+    @Column(unique = false, nullable = true, updatable = true)
+    private String password;
 
     @Column
     private String username;
+
+    public User(String userId, String password) {
+        this.userId = userId;
+        this.password = password;
+    }
+
+    public User(String userId) {
+        this.userId = userId;
+    }
 }

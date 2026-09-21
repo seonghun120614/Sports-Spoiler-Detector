@@ -39,8 +39,8 @@ public class UsernamePasswordAuthenticationSuccessHandler
         String accessToken = jwtProvider.createAccessToken(uid, roles);
         String[] jtiRefreshToken = jwtProvider.createRefreshToken(uid, roles);
 
-        // refresh jwt 캐싱
-        jwtTokenService.cache(uid, jtiRefreshToken[0]);
+        // refresh jti caching
+        jwtTokenService.cacheRefresh(uid, jtiRefreshToken[0]);
 
         // cookie 만들어 내보냄
         var accessCookie = cookieHandler.createCookie("access_token",

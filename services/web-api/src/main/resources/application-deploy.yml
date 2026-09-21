@@ -25,6 +25,7 @@ spring:
           google:
             client-id: ${GOOGLE_CLIENT_ID}
             client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${GOOGLE_REDIRECT_URI}
             scope:
               - openid
               - email
@@ -32,40 +33,48 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: 1234
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/testdb
-    username: postgres
-    password: 1234
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
-        use_sql_comments: true
+        format_sql: false
+        use_sql_comments: false
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
     hibernate:
       ddl-auto: none
 
+server:
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        secure: true
+        http-only: true
+        same-site: Lax
+
 jwt:
-  secret: "this-is-very-secret-key-for-jwt-signing-please-change-it"
+  secret: ${JWT_SECRET}
   access-expire-milli-seconds: 1800000
   refresh-expire-milli-seconds: 604800000
 
 cookie:
   secure: true
   http-only: true
-  same-site: "Strict"
+  same-site: "None"
   path: "/"
 
 logging:
   level:
-    org:
-      springframework:
-        security: DEBUG
+    root: INFO
+    io.github.seonghun.webapi: INFO

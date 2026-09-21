@@ -16,7 +16,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 
 public class CustomUsernamePasswordFilter extends AbstractAuthenticationProcessingFilter {
-    public static final String USER_ID_KEY = "id";
+    public static final String USER_ID_KEY = "userId";
     public static final String PASSWORD_KEY = "password";
 
     private static final RequestMatcher DEFAULT_PATH_REQUEST_MATCHER = PathPatternRequestMatcher

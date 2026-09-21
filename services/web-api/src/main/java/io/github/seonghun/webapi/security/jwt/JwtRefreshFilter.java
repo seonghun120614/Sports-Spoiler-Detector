@@ -43,15 +43,18 @@ public class JwtRefreshFilter extends OncePerRequestFilter {
             String oldRefreshToken = tokens.getOrDefault("refresh_token", "");
             Claims oldRefreshClaim = jwtProvider.parse(oldRefreshToken);
 
-            if (jwtTokenService.isBlacklisted(oldRefreshClaim.getId())) {
-                response.setStatus(HttpStatus.UNAUTHORIZED.value());
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-                response.getWriter().write("무효화된 토큰");
-            }
-
             String jti = oldRefreshClaim.getId();
             String uid = oldRefreshClaim.getSubject();
+
+            if (jwtTokenService.isBlacklisted(jti)) {
+                sendUnauthorized(response, "무효화된 토큰입니다.");
+                return;
+            }
+
+            if (!jwtTokenService.isValidRefresh(uid, jti)) {
+                sendUnauthorized(response, "유효하지 않거나 이미 사용된 리프레시 토큰입니다.");
+                return;
+            }
 
             @SuppressWarnings("unchecked")
             List<String> roleList = oldRefreshClaim.get("roles", List.class);
@@ -65,7 +68,8 @@ public class JwtRefreshFilter extends OncePerRequestFilter {
             String accessToken = jwtProvider.createAccessToken(uid, authorities);
             String[] jtiRefreshToken = jwtProvider.createRefreshToken(uid, authorities);
 
-            jwtTokenService.cache(uid, jtiRefreshToken[0]);
+            // refresh jti caching
+            jwtTokenService.cacheRefresh(uid, jtiRefreshToken[0]);
             var accessCookie = cookieHandler.createCookie("access_token",
                                                           accessToken,
                                                           jwtProvider.getAccessExpirySeconds());
@@ -82,6 +86,13 @@ public class JwtRefreshFilter extends OncePerRequestFilter {
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());
             response.getWriter().write("잘못된 형식");
         }
+    }
+
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 
     @Override
