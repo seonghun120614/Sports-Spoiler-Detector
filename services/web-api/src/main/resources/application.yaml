@@ -8,3 +8,8 @@ spring:
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
+
+llm-worker:
+  base-url: ${LLM_WORKER_BASE_URL}
+  connect-timeout: 3s
+  read-timeout: 60s
