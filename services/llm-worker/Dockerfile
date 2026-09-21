@@ -35,18 +35,20 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Installing separately from its dependencies allows optimal layer caching
 COPY . /app
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-install-project
+    uv sync --locked
 
-
-FROM python:3.12-slim
+FROM python:3.12-slim-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1 libglib2.0-0 libxcb1 libxext6 libsm6 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+ && groupadd --system --gid 999 nonroot \
+ && useradd --system --gid 999 --uid 999 --create-home nonroot
 
 WORKDIR /app
-COPY --from=builder /app /app
+COPY --from=builder --chown=999:999 /app /app
 ENV PATH="/app/.venv/bin:$PATH"
+USER nonroot
 
 EXPOSE 8000
 CMD ["fastapi", "run", "src/main.py", "--host", "0.0.0.0", "--forwarded-allow-ips", "*", "--proxy-headers", "--port", "8000"]
