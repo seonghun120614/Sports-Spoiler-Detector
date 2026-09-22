@@ -4,6 +4,9 @@ on:
   push:
     branches: [ "main" ]
 
+env:
+  REGISTRY_USER: seonghun120614
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,10 +16,10 @@ jobs:
         include:
           - name: web-api
             context: ./services/web-api
-            image_secret: DOCKER_WEB_API_IMAGE_NAME
+            image: sport-spoiler-detector-web-api
           - name: llm-worker
             context: ./services/llm-worker
-            image_secret: DOCKER_LLM_WORKER_IMAGE_NAME
+            image: sport-spoiler-detector-llm-worker
     steps:
       - uses: actions/checkout@v5
       - uses: docker/setup-buildx-action@v3
@@ -32,10 +35,10 @@ jobs:
           push: true
           provenance: false
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets[matrix.image_secret] }}:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets[matrix.image_secret] }}:latest
-          cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets[matrix.image_secret] }}:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets[matrix.image_secret] }}:buildcache,mode=max
+            ${{ env.REGISTRY_USER }}/${{ matrix.image }}:${{ github.sha }}
+            ${{ env.REGISTRY_USER }}/${{ matrix.image }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY_USER }}/${{ matrix.image }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY_USER }}/${{ matrix.image }}:buildcache,mode=max
 
   deploy:
     needs: build

@@ -9,6 +9,9 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+server:
+  forward-headers-strategy: native
+
 llm-worker:
   base-url: ${LLM_WORKER_BASE_URL}
   connect-timeout: 3s
