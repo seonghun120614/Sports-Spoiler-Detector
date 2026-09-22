@@ -6,6 +6,7 @@ import os
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    app.state.models = {}
     if "TEST_FLAG" not in os.environ:
         from src.services.models import (
             GliNER, GroundingDINO, SetFitImpl,
