@@ -9,21 +9,11 @@ RUN groupadd --system --gid 999 nonroot \
 # Install the project into `/app`
 WORKDIR /app
 
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
-
-# Enable bytecode compilation
-ENV UV_COMPILE_BYTECODE=1
-
-# Copy from the cache instead of linking since it's a mounted volume
-ENV UV_LINK_MODE=copy
-
-# Omit development dependencies
-ENV UV_NO_DEV=1
-
-# Ensure installed tools can be executed out of the box
-ENV UV_TOOL_BIN_DIR=/usr/local/bin
+ENV PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_NO_DEV=1 \
+    UV_TOOL_BIN_DIR=/usr/local/bin
 
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -40,14 +30,24 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 FROM python:3.12-slim-trixie
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1 libglib2.0-0 libxcb1 libxext6 libsm6 \
+      gcc libc6-dev \
+      libgl1 libglib2.0-0 libxcb1 libxext6 libsm6 \
     && rm -rf /var/lib/apt/lists/* \
- && groupadd --system --gid 999 nonroot \
- && useradd --system --gid 999 --uid 999 --create-home nonroot
+    && groupadd --system --gid 999 nonroot \
+    && useradd --system --gid 999 --uid 999 --create-home nonroot \
+    && mkdir -p /cache/triton /cache/hf \
+    && chown -R 999:999 /cache
+
+ENV PYTHONUNBUFFERED=1 \
+    PATH="/app/.venv/bin:$PATH" \
+    CC=gcc \
+    TRITON_CACHE_DIR=/cache/triton \
+    HF_HOME=/cache/hf \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 WORKDIR /app
 COPY --from=builder --chown=999:999 /app /app
-ENV PATH="/app/.venv/bin:$PATH"
 USER nonroot
 
 EXPOSE 8000
