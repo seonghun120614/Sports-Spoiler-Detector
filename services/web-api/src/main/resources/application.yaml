@@ -9,6 +9,11 @@ spring:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
 
+  data:
+    redis:
+      repositories:
+        enabled: false
+
 server:
   forward-headers-strategy: native
 
