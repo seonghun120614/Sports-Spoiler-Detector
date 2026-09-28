@@ -19,12 +19,12 @@ public class LlmWorkerClient {
 
     private final RestClient restClient;
 
-    public LlmWorkerClient(LlmWorkerProperty property) {
+    public LlmWorkerClient(RestClient.Builder builder, LlmWorkerProperty property) {
         var requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(property.connectTimeout());
         requestFactory.setReadTimeout(property.readTimeout());
 
-        this.restClient = RestClient.builder()
+        this.restClient = builder
                 .baseUrl(property.baseUrl())
                 .requestFactory(requestFactory)
                 .build();
