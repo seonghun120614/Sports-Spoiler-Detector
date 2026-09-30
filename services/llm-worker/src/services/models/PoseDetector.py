@@ -23,7 +23,7 @@ class YoloV26Pose(BaseModel):
         if not images: return []
 
         result = []
-        outputs = self._model(images, conf=threshold)
+        outputs = self._model(images, conf=threshold, half=HALF)
 
         for r in outputs:
             one = []

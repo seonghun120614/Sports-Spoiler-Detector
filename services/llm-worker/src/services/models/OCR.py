@@ -3,7 +3,7 @@ from src.services.models.BaseModel import BaseModel
 
 import numpy as np
 
-from src.services.models.constants import THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, OCR_LANG
+from src.services.models.constants import THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT, OCR_LANG, OCR_BATCH_SIZE
 
 
 class EasyOCR(BaseModel):
@@ -22,6 +22,7 @@ class EasyOCR(BaseModel):
             images,
             n_width=THUMBNAIL_WIDTH,
             n_height=THUMBNAIL_HEIGHT,
+            batch_size=OCR_BATCH_SIZE,
         )
 
         output = []

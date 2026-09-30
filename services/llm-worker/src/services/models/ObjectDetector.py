@@ -15,6 +15,8 @@ class GroundingDINO(BaseModel):
         from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
         self._processor = AutoProcessor.from_pretrained(self.model_id)
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(self.model_id).to(DEVICE)
+        if HALF:
+            self._model.half()
         self._model.eval()
 
     def predict(self, images: list[Image.Image], threshold: float = 0.3) -> list[list[ImageSpoiler]]:
@@ -25,9 +27,9 @@ class GroundingDINO(BaseModel):
             images=images,
             text=[PROMPT] * len(images),
             return_tensors="pt"
-        ).to(DEVICE)
+        ).to(DEVICE, dtype=self._model.dtype)  # float 텐서(pixel_values 등)만 모델 dtype 으로 캐스팅
 
-        with torch.no_grad():
+        with torch.inference_mode():
             outputs = self._model(**inputs)
 
         results = self._processor.post_process_grounded_object_detection(

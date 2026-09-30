@@ -15,6 +15,8 @@ else:
     device = "cpu"
 
 DEVICE = torch.device(device)
+# FP16 은 CUDA 에서만 사용 (MPS/CPU 는 느리거나 불안정)
+HALF = device == "cuda"
 LABELS = ["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"]
 
 ENTITY_DESC = {
@@ -47,3 +49,4 @@ THUMBNAIL_WIDTH = 640
 THUMBNAIL_HEIGHT = 360
 
 OCR_LANG = ['en', 'ko']
+OCR_BATCH_SIZE = 32

@@ -5,8 +5,21 @@ from .domains.SpoilerInformation import SpoilerInformation, TextSpoiler, ImageSp
 
 import asyncio
 import io
+import threading
 import httpx
 import numpy as np
+
+# 모델 인스턴스별 락: 동시 요청이 같은 모델을 여러 스레드에서 동시에 호출하지 않도록 (YOLO 등은 thread-safe 하지 않음)
+_model_locks: dict[int, threading.Lock] = {}
+
+async def _predict(model: BaseModel, *args):
+    lock = _model_locks.setdefault(id(model), threading.Lock())
+
+    def run():
+        with lock:
+            return model.predict(*args)
+
+    return await asyncio.to_thread(run)
 
 async def check_spoiler_service(
         video_ids: list[str],
@@ -20,22 +33,25 @@ async def check_spoiler_service(
 ) -> list[SpoilerInformation]:
     images = await _fetch_thumbnails(video_ids)
 
-    img_arrays = [np.array(img) for img in images]
+    # OCR -> 텍스트 분석만 순서 의존이 있으므로, 이미지 분석과 병렬 실행
+    async def text_pipeline():
+        img_arrays = [np.array(img) for img in images]
+        ocr_result: list[list[ImageSpoiler]] = await _predict(ocr, img_arrays)
+        return await check_text(
+            titles,
+            ocr_result=ocr_result,
+            text_classifier=text_classifier,
+            ner=ner,
+        )
 
-    ocr_result: list[list[ImageSpoiler]] = ocr.predict(img_arrays)
-
-    title_spoilers, text_spoilers, ocr_result = await check_text(
-        titles,
-        ocr_result=ocr_result,
-        text_classifier=text_classifier,
-        ner=ner,
-    )
-
-    image_spoilers: list[list[ImageSpoiler]] = await check_image(
-        images,
-        object_detector=object_detector,
-        emotion_recognition=emotion_recognition,
-        pose_detector=pose_detector,
+    (title_spoilers, text_spoilers, ocr_result), image_spoilers = await asyncio.gather(
+        text_pipeline(),
+        check_image(
+            images,
+            object_detector=object_detector,
+            emotion_recognition=emotion_recognition,
+            pose_detector=pose_detector,
+        ),
     )
 
     result = []
@@ -71,13 +87,15 @@ async def check_image(
         emotion_recognition: BaseModel,
         pose_detector: BaseModel,
 ) -> list[list[ImageSpoiler]]:
-    # 이미지 N장을 각각 한 번의 배치 호출로
-    objects: list[list[ImageSpoiler]] = object_detector.predict(images)   # list[list[det]]
-    angles: list[list[ImageSpoiler]] = pose_detector.predict(images)         # list[list[angle]]
-
     # DeepFace가 얼굴 검출까지 알아서 하므로 원본 이미지 전체를 BGR로 배치 호출
     bgr_images = [np.array(img)[:, :, ::-1].copy() for img in images]
-    faces: list[list[ImageSpoiler]] = emotion_recognition.predict(bgr_images)
+
+    # 이미지 N장을 각각 한 번의 배치 호출로, 세 모델은 병렬 실행
+    objects, angles, faces = await asyncio.gather(
+        _predict(object_detector, images),       # list[list[det]]
+        _predict(pose_detector, images),         # list[list[angle]]
+        _predict(emotion_recognition, bgr_images),
+    )
 
     return [
         object + angle + face
@@ -103,11 +121,11 @@ async def check_text(
         whole_texts += [title] + [overlay_text.label for overlay_text in overlay_texts]
         title_indices.append(len(whole_texts))
 
-    # Text Classification Batch Processing
-    spoilers: list[SpoilerElement] = text_classifier.predict(whole_texts)
-
-    # NER Batch Processing, only applied title
-    entities: list[list[TextSpoiler]] = ner.predict(titles)
+    # Text Classification / NER(only applied title) Batch Processing, 병렬 실행
+    spoilers, entities = await asyncio.gather(
+        _predict(text_classifier, whole_texts),
+        _predict(ner, titles),
+    )
 
     title_spoilers: list[SpoilerElement] = [spoilers[_] for _ in title_indices[:-1]]
 

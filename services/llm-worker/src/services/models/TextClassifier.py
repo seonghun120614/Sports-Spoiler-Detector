@@ -19,6 +19,8 @@ class SetFitImpl(BaseModel):
             labels=LABELS,
             map_location=DEVICE,
         )
+        if HALF:
+            self._model.model_body.half()
 
     def predict(self, inputs: list[str]) -> list[SpoilerElement]:
         if not inputs: return []
