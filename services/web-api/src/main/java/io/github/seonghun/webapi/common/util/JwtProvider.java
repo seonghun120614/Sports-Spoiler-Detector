@@ -68,10 +68,10 @@ public class JwtProvider {
     }
 
     public long getAccessExpirySeconds() {
-        return jwtProperty.accessExpireMilliSeconds();
+        return jwtProperty.accessExpireMilliSeconds() / 1000;
     }
 
     public long getRefreshExpirySeconds() {
-        return jwtProperty.refreshExpireMilliSeconds();
+        return jwtProperty.refreshExpireMilliSeconds() / 1000;
     }
 }

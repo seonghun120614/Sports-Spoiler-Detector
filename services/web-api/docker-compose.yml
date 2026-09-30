@@ -1,12 +1,11 @@
 services:
   redis:
     image: redis:7
-    environment:
-      - REDIS_PASSWORD=1234
+    command: ["redis-server", "--requirepass", "1234"]
     ports:
       - "6379:6379"
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: [ "CMD", "redis-cli", "-a", "1234", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 5

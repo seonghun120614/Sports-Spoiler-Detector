@@ -12,6 +12,9 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class MailServiceImpl implements MailService {
 
+    private final int SEND_TTL_MILLIS = 180_000;
+    private final int COMPLETE_TTL_MILLIS = 600_000;
+
     private final RedisUtil redisUtil;
     private final CustomMailSender mailSender;
     private final RandomGenerator randomGenerator;
@@ -30,7 +33,7 @@ public class MailServiceImpl implements MailService {
                     </span>
                 </div>
                 <p style="color: #999; font-size: 12px;">
-                    본 코드는 5분간 유효합니다.<br>
+                    본 코드는 3분간 유효합니다.<br>
                     본인이 요청하지 않으셨다면 이 메일을 무시해 주세요.
                 </p>
             </div>
@@ -43,14 +46,14 @@ public class MailServiceImpl implements MailService {
         var code = randomGenerator.generateAlphanumeric(6);
         String mailBody = String.format(VERIFICATION_BODY_TEMPLATE, code);
         mailSender.sendEmail(email, VERIFICATION_SUBJECT, mailBody);
-        redisUtil.save("mail-verification", email, code, 60_000);
+        redisUtil.save("mail-verification", email, code, SEND_TTL_MILLIS);
     }
 
     @Override
     public boolean verifyMailCode(String email, String code) {
         var checked = redisUtil.isValidAndEquals("mail-verification", email, code);
         if (checked)
-            redisUtil.save("mail-verification", email, "complete", 600_000);
+            redisUtil.save("mail-verification", email, "complete", COMPLETE_TTL_MILLIS);
         return checked;
     }
 }

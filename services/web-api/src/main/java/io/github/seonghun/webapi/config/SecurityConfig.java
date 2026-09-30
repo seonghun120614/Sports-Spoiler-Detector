@@ -66,10 +66,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST,
                                          "/api/login",
                                          "/api/refresh",
-                                         "/api/logout",
+                                         "/api/auth/logout",
                                          "/api/users/signup",
-                                         "/api/verification/send-mail",
-                                         "/api/verification/mail").permitAll()
+                                         "/api/auth/verification/send-mail",
+                                         "/api/auth/verification/mail").permitAll()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))

@@ -24,7 +24,9 @@ import java.util.Set;
 public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     private static final Set<String> DEFAULT_ROLES = Set.of("ROLE_USER");
-    private static final String REDIRECT_URL = "https://bdlddgomjfdlkmoaammpncmaaheibkof.chromiumapp.org/callback";
+
+    @Value("${oauth2.redirect-url}")
+    private String successRedirectUrl;
     private final JwtProvider jwtProvider;
     private final JwtTokenService jwtTokenService;
     private final CookieHandler cookieHandler;
@@ -59,7 +61,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
                 + "&email=" + encode(email)
                 + "&name=" + encode(displayName);
 
-        response.sendRedirect(REDIRECT_URL + "#" + fragment);
+        response.sendRedirect(successRedirectUrl + "#" + fragment);
     }
 
     private static String encode(String value) {
