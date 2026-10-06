@@ -14,9 +14,9 @@ class GroundingDINO(BaseModel):
     def __post_init__(self):
         from transformers import AutoProcessor, AutoModelForZeroShotObjectDetection
         self._processor = AutoProcessor.from_pretrained(self.model_id)
+        # .half() 는 사용하지 않음: transformers GroundingDINO 가 reference points 를 float32 로 고정 생성해서
+        # deformable attention 의 grid_sample 에서 Half/Float 불일치가 남. 대신 predict 에서 autocast 사용
         self._model = AutoModelForZeroShotObjectDetection.from_pretrained(self.model_id).to(DEVICE)
-        if HALF:
-            self._model.half()
         self._model.eval()
 
     def predict(self, images: list[Image.Image], threshold: float = 0.3) -> list[list[ImageSpoiler]]:
@@ -27,9 +27,9 @@ class GroundingDINO(BaseModel):
             images=images,
             text=[PROMPT] * len(images),
             return_tensors="pt"
-        ).to(DEVICE, dtype=self._model.dtype)  # float 텐서(pixel_values 등)만 모델 dtype 으로 캐스팅
+        ).to(DEVICE)
 
-        with torch.inference_mode():
+        with torch.inference_mode(), torch.autocast(device_type="cuda", dtype=torch.float16, enabled=HALF):
             outputs = self._model(**inputs)
 
         results = self._processor.post_process_grounded_object_detection(
