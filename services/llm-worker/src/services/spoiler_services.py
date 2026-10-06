@@ -1,7 +1,7 @@
 from PIL import Image
 
 from src.services.models.BaseModel import BaseModel
-from .domains.SpoilerInformation import SpoilerInformation, TextSpoiler, ImageSpoiler, SpoilerElement
+from .domains.SpoilerInformation import SpoilerInformation, TextSpoiler, ImageSpoiler
 
 import asyncio
 import io
@@ -28,24 +28,15 @@ async def check_spoiler_service(
         ner: BaseModel,
         object_detector: BaseModel,
         pose_detector: BaseModel,
-        text_classifier: BaseModel,
         ocr: BaseModel,
 ) -> list[SpoilerInformation]:
     images = await _fetch_thumbnails(video_ids)
 
-    # OCR -> 텍스트 분석만 순서 의존이 있으므로, 이미지 분석과 병렬 실행
-    async def text_pipeline():
-        img_arrays = [np.array(img) for img in images]
-        ocr_result: list[list[ImageSpoiler]] = await _predict(ocr, img_arrays)
-        return await check_text(
-            titles,
-            ocr_result=ocr_result,
-            text_classifier=text_classifier,
-            ner=ner,
-        )
-
-    (title_spoilers, text_spoilers, ocr_result), image_spoilers = await asyncio.gather(
-        text_pipeline(),
+    # OCR / NER(title) / 이미지 분석은 서로 독립적이므로 병렬 실행
+    img_arrays = [np.array(img) for img in images]
+    ocr_result, text_spoilers, image_spoilers = await asyncio.gather(
+        _predict(ocr, img_arrays),
+        check_text(titles, ner=ner),
         check_image(
             images,
             object_detector=object_detector,
@@ -56,13 +47,12 @@ async def check_spoiler_service(
 
     result = []
 
-    for idx, (spoiler, text_spoiler, image_spoiler) in enumerate(zip(title_spoilers, text_spoilers, image_spoilers)):
+    for idx, (text_spoiler, image_spoiler) in enumerate(zip(text_spoilers, image_spoilers)):
         spoiler_information = SpoilerInformation(
             video_id=video_ids[idx],
             title=titles[idx],
             width=images[idx].width,
             height=images[idx].height,
-            spoiler=spoiler,
             texts=text_spoiler,
             images=image_spoiler + ocr_result[idx],
         )
@@ -105,39 +95,7 @@ async def check_image(
 
 async def check_text(
         titles: list[str],
-        text_classifier: BaseModel,
         ner: BaseModel,
-        ocr_result: list[list[ImageSpoiler]] | None = None,
-) -> tuple[
-    list[SpoilerElement],
-    list[list[TextSpoiler]],
-    list[list[ImageSpoiler]]
-]:
-    whole_texts: list[str] = []
-    title_indices: list[int] = [0]
-
-    # Merging All
-    for title, overlay_texts in zip(titles, ocr_result):
-        whole_texts += [title] + [overlay_text.label for overlay_text in overlay_texts]
-        title_indices.append(len(whole_texts))
-
-    # Text Classification / NER(only applied title) Batch Processing, 병렬 실행
-    spoilers, entities = await asyncio.gather(
-        _predict(text_classifier, whole_texts),
-        _predict(ner, titles),
-    )
-
-    title_spoilers: list[SpoilerElement] = [spoilers[_] for _ in title_indices[:-1]]
-
-    overlay_text_spoilers: list[list[SpoilerElement]] = [spoilers[(title_indices[i]+1):title_indices[i+1]] for i in range(len(title_indices)-1)]
-    ocr_result: list[list[ImageSpoiler]] = [
-        [
-            item.set_label(spoiler_element.label)
-            .set_confidence(spoiler_element.confidence)
-            for item, spoiler_element
-            in zip(inner_items, spoiler_elements)
-        ] for inner_items, spoiler_elements
-        in zip(ocr_result, overlay_text_spoilers)
-    ]
-
-    return title_spoilers, entities, ocr_result
+) -> list[list[TextSpoiler]]:
+    # NER 은 제목에만 적용
+    return await _predict(ner, titles)

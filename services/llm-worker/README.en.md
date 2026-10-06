@@ -47,7 +47,6 @@
 | Module | Model | Purpose |
 | --- | --- | --- |
 | **NER** | GLiNER2 (DeBERTa-v3-base) | Extract sports entities from titles |
-| **Text Classifier** | SetFit + `paraphrase-multilingual-mpnet-base-v2` | 3-class: Direct / Indirect / Non-Spoiler |
 | **Object Detector** | Grounding DINO Tiny | Zero-shot detection of trophies, balls, goal nets, etc. |
 | **Emotion Recognition** | DeepFace | Facial emotion analysis on thumbnails |
 | **Pose Detector** | YOLOv26n-pose | Celebration pose detection |
@@ -70,13 +69,12 @@
 * **Batch spoiler detection**: Process an array of YouTube `video_id` + `title` pairs in a single API call
 * **Automatic thumbnail fetch**: Retrieves thumbnails from `img.youtube.com/vi/{video_id}/mqdefault.jpg`
 * **Text analysis pipeline**
-  * Classify spoiler level with SetFit on title + OCR-extracted text
   * Extract 9 types of sports entities from titles with GLiNER NER (win/loss, scoring, special events, etc.)
 * **Image analysis pipeline** (parallel batch processing)
   * Grounding DINO: Detect spoiler-related objects (trophy, ball, goal net)
   * DeepFace: Player/spectator facial emotions (happy, surprise, neutral, etc.)
   * YOLO Pose: Celebration poses (arms spread + knee sliding)
-  * EasyOCR: Extract overlay text from thumbnails and feed into the text classifier
+  * EasyOCR: Extract overlay text from thumbnails
 * **Chrome Extension integration**: CORS configured for Chrome Extension origins
 * **Mock mode**: Returns test mock responses when `TEST_FLAG` is set or model loading fails
 * **GPU acceleration**: NVIDIA GPU support in production (Docker Compose)
@@ -94,12 +92,6 @@
 | `special_event` | Game-changing events (red cards, penalties, injuries, etc.) |
 | `emotive` | Emotional modifiers (shocking, miraculous, etc.) |
 | `aftermath` | Post-match consequences (dismissal, retirement, etc.) |
-
-### Spoiler Classification Labels
-
-* `Direct Spoiler` — Match outcome is directly revealed
-* `Indirect Spoiler` — Indirect clues that allow inferring the outcome
-* `Non-Spoiler` — No spoiler elements
 
 ---
 
@@ -136,10 +128,6 @@
       "title": "[3-min Highlights] Round of 32 Spain VS Austria",
       "width": 320,
       "height": 180,
-      "spoiler": {
-        "label": "Direct Spoiler",
-        "confidence": 0.896
-      },
       "texts": [
         {
           "label": "name",
@@ -168,7 +156,6 @@
 | Field | Type | Description |
 | --- | --- | --- |
 | `spoiler_information` | `dict[string, SpoilerInformation]` | Mapping of video_id → analysis result |
-| `spoiler` | `SpoilerElement` | Title-level spoiler classification |
 | `texts` | `TextSpoiler[]` | NER-extracted entities from the title |
 | `images` | `ImageSpoiler[]` | Combined object, emotion, pose, and OCR detections |
 | `api_version` | `string` | API version (default `"v1"`) |
@@ -218,7 +205,6 @@ Chrome Extension
     │
     ├─► EasyOCR ──► Overlay text extraction
     │
-    ├─► SetFit ──► Spoiler classification (title + OCR text)
     ├─► GLiNER ──► NER entity extraction (title)
     │
     ├─► Grounding DINO ──► Object detection (trophy, ball, goal net)
@@ -343,7 +329,6 @@ classDiagram
         +string title
         +int width
         +int height
-        +string spoiler
         +Sequence texts
         +Sequence images
     }
@@ -388,10 +373,6 @@ classDiagram
         +predict(titles) list~TextSpoiler~
     }
 
-    class SetFitImpl {
-        +predict(texts) list~SpoilerElement~
-    }
-
     class GroundingDINO {
         +predict(images) list~ImageSpoiler~
     }
@@ -419,7 +400,6 @@ classDiagram
     SpoilerService --> BaseModel
 
     Lifespan --> GliNER
-    Lifespan --> SetFitImpl
     Lifespan --> GroundingDINO
     Lifespan --> DeepFaceRecognition
     Lifespan --> YoloV26Pose
@@ -433,7 +413,6 @@ classDiagram
     BoundingBox --> Point
 
     BaseModel <|-- GliNER
-    BaseModel <|-- SetFitImpl
     BaseModel <|-- GroundingDINO
     BaseModel <|-- DeepFaceRecognition
     BaseModel <|-- YoloV26Pose
@@ -452,7 +431,6 @@ classDiagram
 * [uv](https://docs.astral.sh/uv/) package manager
 * ML model weights (`static/` directory — excluded by `.gitignore`, must be prepared separately)
   * `static/ner_model/` — GLiNER2 NER
-  * `static/soccer_spoiler_mpnet_v1/` — SetFit text classifier
   * `static/yolo26n-pose.pt` — YOLO pose model
 
 ### Local Run (uv)

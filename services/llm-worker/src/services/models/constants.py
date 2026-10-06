@@ -5,7 +5,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 NER_MODEL_PATH = str(BASE_DIR / "static" / "ner_model")
 POSE_DETECTOR_PATH = str(BASE_DIR / "static" / "yolo26n-pose.pt")
 OBJECT_DETECTOR_PATH = "IDEA-Research/grounding-dino-tiny"
-SETFIT_MODEL_PATH = str(BASE_DIR / "static" / "soccer_spoiler_mpnet_v1")
 
 if torch.cuda.is_available():
     device = "cuda"
@@ -17,7 +16,6 @@ else:
 DEVICE = torch.device(device)
 # FP16 은 CUDA 에서만 사용 (MPS/CPU 는 느리거나 불안정)
 HALF = device == "cuda"
-LABELS = ["Direct Spoiler", "Indirect Spoiler", "Non-Spoiler"]
 
 ENTITY_DESC = {
     "success": "A text that indicates a positive result of the match (victory, win, advance, etc.)",

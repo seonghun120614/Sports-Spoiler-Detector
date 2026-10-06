@@ -5,10 +5,6 @@ _TEST_RESPONSE_DATA = {
             "title": "[3분 하이라이트] 32강 스페인 VS 오스트리아｜2026 FIFA 북중미 월드컵",
             "width": 320,
             "height": 180,
-            "spoiler": {
-                "label": "Direct Spoiler",
-                "confidence": 0.896
-            },
             "texts": [
                 {
                     "label": "name",
@@ -149,10 +145,6 @@ _TEST_RESPONSE_DATA = {
             "title": "매달 Claude Opus 4.8 무료 사용하기! v0.app 5달러 AI 크레딧 활용법",
             "width": 320,
             "height": 180,
-            "spoiler": {
-                "label": "Non-Spoiler",
-                "confidence": 0.993
-            },
             "texts": [
                 {
                     "label": "name",
@@ -270,10 +262,6 @@ _TEST_RESPONSE_DATA = {
             "title": "[현장영상] ‘축구의 신’도 헛웃음 지었다…세계 최강 얼어붙게 만든 카보베르데 / KBS 2026 북중미 월드컵 2026.07.04.",
             "width": 320,
             "height": 180,
-            "spoiler": {
-                "label": "Direct Spoiler",
-                "confidence": 0.829
-            },
             "texts": [
                 {
                     "label": "name",

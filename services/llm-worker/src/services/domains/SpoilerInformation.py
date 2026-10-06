@@ -73,7 +73,6 @@ class SpoilerInformation:
     title: str
     width: int
     height: int
-    spoiler: str
     texts: Sequence[TextSpoiler]
     images: Sequence[ImageSpoiler]
 

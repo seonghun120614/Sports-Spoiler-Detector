@@ -9,12 +9,9 @@ public record CheckSpoilerResponse(
         String title,
         int width,
         int height,
-        Prediction spoiler,
         List<TextEntity> texts,
         List<ImageRegion> images
 ) {
-    public record Prediction(String label, double confidence) {}
-
     public record TextEntity(String label, double confidence, String text, Span span) {}
 
     public record Span(int start, int end) {}

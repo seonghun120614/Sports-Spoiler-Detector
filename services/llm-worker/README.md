@@ -47,7 +47,6 @@
 | 모듈 | 모델 | 용도 |
 | --- | --- | --- |
 | **NER** | GLiNER2 (DeBERTa-v3-base) | 제목에서 스포츠 엔티티 추출 |
-| **Text Classifier** | SetFit + `paraphrase-multilingual-mpnet-base-v2` | Direct / Indirect / Non-Spoiler 3분류 |
 | **Object Detector** | Grounding DINO Tiny | 트로피, 공, 골대 등 zero-shot 객체 탐지 |
 | **Emotion Recognition** | DeepFace | 썸네일 얼굴 감정 분석 |
 | **Pose Detector** | YOLOv26n-pose | 세리머니 포즈 탐지 |
@@ -70,13 +69,12 @@
 * **배치 스포일러 검사**: YouTube `video_id` + `title` 배열을 한 번의 API 호출로 처리
 * **썸네일 자동 수집**: `img.youtube.com/vi/{video_id}/mqdefault.jpg`에서 썸네일 fetch
 * **텍스트 분석 파이프라인**
-  * 제목 + OCR 추출 텍스트를 SetFit으로 스포일러 등급 분류
   * 제목에 GLiNER NER로 9종 스포츠 엔티티 추출 (승패, 득점, 특수 이벤트 등)
 * **이미지 분석 파이프라인** (병렬 배치 처리)
   * Grounding DINO: 트로피, 공, 골대 등 스포일러 객체 탐지
   * DeepFace: 선수/관중 얼굴 감정 (happy, surprise, neutral 등)
   * YOLO Pose: 세리머니 포즈 (양팔 벌림 + 무릎 슬라이딩)
-  * EasyOCR: 썸네일 내 오버레이 텍스트 추출 후 텍스트 분류기와 연동
+  * EasyOCR: 썸네일 내 오버레이 텍스트 추출
 * **Chrome Extension 연동**: CORS를 Chrome Extension origin에 맞게 설정
 * **Mock 모드**: `TEST_FLAG` 환경변수 또는 모델 로딩 실패 시 테스트용 mock 응답 반환
 * **GPU 가속**: 프로덕션 환경에서 NVIDIA GPU 지원 (Docker Compose)
@@ -94,12 +92,6 @@
 | `special_event` | 퇴장, PK, 부상 등 게임 흐름을 바꾸는 이벤트 |
 | `emotive` | 충격적, 기적적 등 감정 수식어 |
 | `aftermath` | 경기 후 해임, 은퇴 등 여파 |
-
-### 스포일러 분류 레이블
-
-* `Direct Spoiler` — 경기 결과가 직접적으로 드러남
-* `Indirect Spoiler` — 결과를 유추할 수 있는 간접적 단서
-* `Non-Spoiler` — 스포일러 요소 없음
 
 ---
 
@@ -136,10 +128,6 @@
       "title": "[3분 하이라이트] 32강 스페인 VS 오스트리아",
       "width": 320,
       "height": 180,
-      "spoiler": {
-        "label": "Direct Spoiler",
-        "confidence": 0.896
-      },
       "texts": [
         {
           "label": "name",
@@ -168,7 +156,6 @@
 | 필드 | 타입 | 설명 |
 | --- | --- | --- |
 | `spoiler_information` | `dict[string, SpoilerInformation]` | video_id → 분석 결과 매핑 |
-| `spoiler` | `SpoilerElement` | 제목 전체 스포일러 분류 결과 |
 | `texts` | `TextSpoiler[]` | NER로 추출된 제목 내 엔티티 목록 |
 | `images` | `ImageSpoiler[]` | 객체·감정·포즈·OCR 탐지 결과 통합 |
 | `api_version` | `string` | API 버전 (기본값 `"v1"`) |
@@ -218,7 +205,6 @@ Chrome Extension
     │
     ├─► EasyOCR ──► 썸네일 오버레이 텍스트 추출
     │
-    ├─► SetFit ──► 제목 + OCR 텍스트 스포일러 분류
     ├─► GLiNER ──► 제목 NER 엔티티 추출
     │
     ├─► Grounding DINO ──► 객체 탐지 (trophy, ball, goal net)
@@ -343,7 +329,6 @@ classDiagram
         +string title
         +int width
         +int height
-        +string spoiler
         +Sequence texts
         +Sequence images
     }
@@ -388,10 +373,6 @@ classDiagram
         +predict(titles) list~TextSpoiler~
     }
 
-    class SetFitImpl {
-        +predict(texts) list~SpoilerElement~
-    }
-
     class GroundingDINO {
         +predict(images) list~ImageSpoiler~
     }
@@ -419,7 +400,6 @@ classDiagram
     SpoilerService --> BaseModel
 
     Lifespan --> GliNER
-    Lifespan --> SetFitImpl
     Lifespan --> GroundingDINO
     Lifespan --> DeepFaceRecognition
     Lifespan --> YoloV26Pose
@@ -433,7 +413,6 @@ classDiagram
     BoundingBox --> Point
 
     BaseModel <|-- GliNER
-    BaseModel <|-- SetFitImpl
     BaseModel <|-- GroundingDINO
     BaseModel <|-- DeepFaceRecognition
     BaseModel <|-- YoloV26Pose
@@ -452,7 +431,6 @@ classDiagram
 * [uv](https://docs.astral.sh/uv/) 패키지 매니저
 * ML 모델 가중치 (`static/` 디렉터리 — `.gitignore` 대상, 별도 준비 필요)
   * `static/ner_model/` — GLiNER2 NER
-  * `static/soccer_spoiler_mpnet_v1/` — SetFit 텍스트 분류기
   * `static/yolo26n-pose.pt` — YOLO 포즈 모델
 
 ### 로컬 실행 (uv)

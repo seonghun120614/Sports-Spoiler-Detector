@@ -74,7 +74,7 @@ Sports-Spoiler-Detector/
     └── llm-worker/               # Python 3.12 / FastAPI — 스포일러 탐지 ML API
         ├── README.md / README.en.md # ML 파이프라인 상세 문서
         ├── Dockerfile               # uv builder → python:3.12-slim-trixie runtime
-        ├── static/                  # 모델 가중치 (NER, SetFit, YOLO pose) — 운영에서는 볼륨 마운트
+        ├── static/                  # 모델 가중치 (NER, YOLO pose) — 운영에서는 볼륨 마운트
         ├── src/
         └── tests/
 ```
@@ -101,7 +101,7 @@ Sports-Spoiler-Detector/
 ### ML Worker (services/llm-worker)
 
 * **Language/Framework**: Python 3.12 / FastAPI, Uvicorn, uv
-* **Models**: GLiNER2 (NER), SetFit (텍스트 분류), Grounding DINO (객체 탐지), DeepFace (감정), YOLOv26n-pose (포즈), EasyOCR (OCR)
+* **Models**: GLiNER2 (NER), Grounding DINO (객체 탐지), DeepFace (감정), YOLOv26n-pose (포즈), EasyOCR (OCR)
 * **Runtime**: PyTorch (CUDA → MPS → CPU 자동 선택)
 
 ### Infrastructure & DevOps
