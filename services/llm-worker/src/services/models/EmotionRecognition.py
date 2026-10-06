@@ -21,6 +21,9 @@ class DeepFaceRecognition(BaseModel):
         for faces in outputs:
             one = []
             for face in faces:
+                # enforce_detection=False 에서 얼굴이 없으면 DeepFace가 이미지 전체를 region(face_confidence=0)으로 돌려준다
+                if face.get('face_confidence', 0) <= 0:
+                    continue
                 emotion = face['dominant_emotion']
 
                 spoiler_elem = SpoilerElement(label = emotion,
