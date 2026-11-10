@@ -12,6 +12,15 @@ import numpy as np
 # 모델 인스턴스별 락: 동시 요청이 같은 모델을 여러 스레드에서 동시에 호출하지 않도록 (YOLO 등은 thread-safe 하지 않음)
 _model_locks: dict[int, threading.Lock] = {}
 
+OBJECT_DETECTOR_CHUNK = 4
+
+
+async def _predict_chunked(model: BaseModel, items: list, chunk: int):
+    results = []
+    for i in range(0, len(items), chunk):
+        results.extend(await _predict(model, items[i:i + chunk]))
+    return results
+
 async def _predict(model: BaseModel, *args):
     lock = _model_locks.setdefault(id(model), threading.Lock())
 
@@ -80,10 +89,9 @@ async def check_image(
     # DeepFace가 얼굴 검출까지 알아서 하므로 원본 이미지 전체를 BGR로 배치 호출
     bgr_images = [np.array(img)[:, :, ::-1].copy() for img in images]
 
-    # 이미지 N장을 각각 한 번의 배치 호출로, 세 모델은 병렬 실행
     objects, angles, faces = await asyncio.gather(
-        _predict(object_detector, images),       # list[list[det]]
-        _predict(pose_detector, images),         # list[list[angle]]
+        _predict_chunked(object_detector, images, OBJECT_DETECTOR_CHUNK),
+        _predict(pose_detector, images),
         _predict(emotion_recognition, bgr_images),
     )
 
