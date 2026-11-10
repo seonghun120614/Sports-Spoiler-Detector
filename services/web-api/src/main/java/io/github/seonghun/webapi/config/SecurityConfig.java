@@ -43,7 +43,7 @@ import java.util.List;
 })
 public class SecurityConfig {
 
-    @Value("${CORS_ALLOWED_ORIGINS}")
+    @Value("${spring.security.cors.allowed.origins}")
     private List<String> corsAllowedOrigins;
 
     @Bean
