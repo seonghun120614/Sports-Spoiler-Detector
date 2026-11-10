@@ -43,8 +43,8 @@ import java.util.List;
 })
 public class SecurityConfig {
 
-    @Value("${spring.security.cors.allowed.origins}")
-    private String corsAllowedOrigin;
+    @Value("${CORS_ALLOWED_ORIGINS}")
+    private List<String> corsAllowedOrigins;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -86,7 +86,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         var config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(corsAllowedOrigin));
+        config.setAllowedOrigins(corsAllowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization"));
         config.setAllowCredentials(true);   // 쿠키(JWT)를 주고받는다면 필요
